@@ -1,0 +1,8 @@
+﻿  main.cpp
+F:\UIA\GridAutomate\GridAutomate\UIElement.h(235,28): warning C4229: anachronism used: modifiers on data are ignored
+  (compiling source file 'main.cpp')
+  
+F:\UIA\GridAutomate\GridAutomate\UIElement.h(245,28): warning C4229: anachronism used: modifiers on data are ignored
+  (compiling source file 'main.cpp')
+  
+  GridAutomate.vcxproj -> F:\UIA\GridAutomate\x64\Debug\GridAutomate.exe
