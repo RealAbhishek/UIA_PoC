@@ -151,7 +151,6 @@ public:
         return nullptr;
     }
 
-    // This needs investigation
     std::unique_ptr<UIElement> FindGridElement(const UIElement& parent) 
     {
         std::wcout << L"FindGridElement\n";
@@ -183,7 +182,7 @@ public:
             if (SUCCEEDED(hr)) 
             {
                 std::wcout << L"FindGridElement D\n";
-                parent.GetRawElement()->FindFirst(TreeScope_Descendants, pCondition, &pGrid); // Failing
+                parent.GetRawElement()->FindFirst(TreeScope_Descendants, pCondition, &pGrid);
                 pCondition->Release();
             }
         }
@@ -226,57 +225,102 @@ public:
         return nullptr;
     }
 
-    std::vector<IUIAutomationElement*> GetElements(const UIElement& parent, IUIAutomationElementArray* currentChildren = nullptr)
+    std::unique_ptr<UIElement> FindSpinnerElement(const UIElement& parent)
     {
-        std::vector<IUIAutomationElement*> elements;
-        if (!currentChildren)
+        std::wcout << L"Finding Spinner element\n";
+        IUIAutomationCondition* pNameCondition = nullptr;
+        IUIAutomationCondition* pControlTypeCondition = nullptr;
+        IUIAutomationCondition* pAndCondition = nullptr;
+        IUIAutomationElement* pSpinnerElement = nullptr;
+        VARIANT varProp;
+        VariantInit(&varProp);
+
+        varProp.vt = VT_BSTR;
+        varProp.bstrVal = SysAllocString(L"Spinner");
+        HRESULT hr = m_pAutomation->CreatePropertyCondition(UIA_NamePropertyId, varProp, &pNameCondition);
+        VariantClear(&varProp);
+
+        if (SUCCEEDED(hr))
         {
-            IUIAutomationElementArray* children;
-            IFACEMETHODIMP hr = parent.GetRawElement()->GetCachedChildren(&children);
-            if (SUCCEEDED(hr))
-            {
-                currentChildren = children;
-            }
+            varProp.vt = VT_I4;
+            varProp.lVal = UIA_EditControlTypeId;
+            hr = m_pAutomation->CreatePropertyCondition(UIA_ControlTypePropertyId, varProp, &pControlTypeCondition);
+            VariantClear(&varProp);
         }
 
-        if (currentChildren)
+        if (SUCCEEDED(hr))
         {
-            int length;
-            IFACEMETHODIMP hr = currentChildren->get_Length(&length);
-            if (SUCCEEDED(hr))
-            {
-                for (int i = 0; i < length; i++)
-                {
-                    IUIAutomationElement* child;
-                    hr = currentChildren->GetElement(i, &child);
-                    if (SUCCEEDED(hr))
-                    {
-                        elements.push_back(child);
-                        std::vector<IUIAutomationElement*> grandchildren = GetElements(parent);
-                        elements.insert(elements.end(), grandchildren.begin(), grandchildren.end());
-                    }
-                }
-            }
+            hr = m_pAutomation->CreateAndCondition(pNameCondition, pControlTypeCondition, &pAndCondition);
         }
 
-        if (currentChildren)
+        if (SUCCEEDED(hr))
         {
-            currentChildren->Release();
+            hr = parent.GetRawElement()->FindFirst(TreeScope_Descendants, pAndCondition, &pSpinnerElement);
         }
 
-        return elements;
+        if (pNameCondition) pNameCondition->Release();
+        if (pControlTypeCondition) pControlTypeCondition->Release();
+        if (pAndCondition) pAndCondition->Release();
+
+        if (SUCCEEDED(hr) && pSpinnerElement)
+        {
+            return std::make_unique<UIElement>(pSpinnerElement);
+        }
+        else
+        {
+            if (pSpinnerElement) pSpinnerElement->Release();
+            return nullptr;
+        }
     }
 
-    //std::vector<IUIAutomationElement*> GetElements(const UIElement& parent)
-    //{
-    //    std::vector<IUIAutomationElement*> elements;
-    //    IUIAutomationElement* child = parent.GetRawElement()->GetFirstChild();
-    //    while (child)
-    //    {
-    //        elements.push_back(child);
-    //        child = child->GetNextSibling();
-    //    }
-    //    return elements;
-    //}
+    std::unique_ptr<UIElement> FindElementByName(const UIElement& parent, const std::wstring& elementName)
+    {
+
+        std::wcout << L"Finding Spinner element\n";
+        IUIAutomationCondition* pNameCondition = nullptr;
+        IUIAutomationCondition* pControlTypeCondition = nullptr;
+        IUIAutomationCondition* pAndCondition = nullptr;
+        IUIAutomationElement* pSpinnerElement = nullptr;
+        VARIANT varProp;
+        VariantInit(&varProp);
+
+        varProp.vt = VT_BSTR;
+        varProp.bstrVal = SysAllocString(elementName.c_str());
+        HRESULT hr = m_pAutomation->CreatePropertyCondition(UIA_NamePropertyId, varProp, &pNameCondition);
+        VariantClear(&varProp);
+
+        if (SUCCEEDED(hr))
+        {
+            varProp.vt = VT_I4;
+            varProp.lVal = UIA_EditControlTypeId;
+            hr = m_pAutomation->CreatePropertyCondition(UIA_ControlTypePropertyId, varProp, &pControlTypeCondition);
+            VariantClear(&varProp);
+        }
+
+        if (SUCCEEDED(hr))
+        {
+            hr = m_pAutomation->CreateAndCondition(pNameCondition, pControlTypeCondition, &pAndCondition);
+        }
+
+        if (SUCCEEDED(hr))
+        {
+            hr = parent.GetRawElement()->FindFirst(TreeScope_Descendants, pAndCondition, &pSpinnerElement);
+        }
+
+        if (pNameCondition) pNameCondition->Release();
+        if (pControlTypeCondition) pControlTypeCondition->Release();
+        if (pAndCondition) pAndCondition->Release();
+
+        if (SUCCEEDED(hr) && pSpinnerElement)
+        {
+            return std::make_unique<UIElement>(pSpinnerElement);
+        }
+        else
+        {
+            if (pSpinnerElement) pSpinnerElement->Release();
+            return nullptr;
+        }
+    }
+
 };
 
