@@ -7,7 +7,23 @@
 #include <memory>
 #include <vector>
 #include <queue>
+#include <comutil.h>
 
+
+// Define OrientationType constants if not defined
+#ifndef OrientationType_None
+#define OrientationType_None 0
+#endif
+
+#ifndef OrientationType_Horizontal
+#define OrientationType_Horizontal 1
+#endif
+
+#ifndef OrientationType_Vertical
+#define OrientationType_Vertical 2
+#endif
+
+#pragma comment(lib, "comsuppw.lib")
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "ole32.lib")
 #pragma comment(lib, "oleaut32.lib")
@@ -273,7 +289,7 @@ public:
         }
     }
 
-    std::unique_ptr<UIElement> FindElementByName(const UIElement& parent, const std::wstring& elementName)
+    std::unique_ptr<UIElement> FindElementByNameAndType(const UIElement& parent, const std::wstring& elementName, const long& type)
     {
 
         std::wcout << L"Finding Spinner element\n";
@@ -292,7 +308,7 @@ public:
         if (SUCCEEDED(hr))
         {
             varProp.vt = VT_I4;
-            varProp.lVal = UIA_EditControlTypeId;
+            varProp.lVal = type;// UIA_EditControlTypeId;
             hr = m_pAutomation->CreatePropertyCondition(UIA_ControlTypePropertyId, varProp, &pControlTypeCondition);
             VariantClear(&varProp);
         }
@@ -319,6 +335,192 @@ public:
         {
             if (pSpinnerElement) pSpinnerElement->Release();
             return nullptr;
+        }
+    }
+
+    std::unique_ptr<UIElement> FindScrollBarByName(const UIElement& parent, const std::wstring& scrollbarName)
+    {
+        std::wcout << L"Finding scrollbar with name: " << scrollbarName << L'\n';
+        IUIAutomationElement* pScrollBarElement = nullptr;
+        IUIAutomationCondition* pScrollBarCondition = nullptr;
+        IUIAutomationCondition* pNameCondition = nullptr;
+        IUIAutomationCondition* pAndCondition = nullptr;
+        HRESULT hr = S_OK;
+
+        hr = m_pAutomation->CreatePropertyCondition(
+            UIA_ControlTypePropertyId,
+            _variant_t(UIA_ScrollBarControlTypeId),
+            &pScrollBarCondition);
+
+        if (SUCCEEDED(hr))
+        {
+            hr = m_pAutomation->CreatePropertyCondition(
+                UIA_NamePropertyId,
+                _variant_t(scrollbarName.c_str()),
+                &pNameCondition);
+        }
+
+        if (SUCCEEDED(hr))
+        {
+            hr = m_pAutomation->CreateAndCondition(pScrollBarCondition, pNameCondition, &pAndCondition);
+        }
+
+        if (SUCCEEDED(hr))
+        {
+            hr = parent.GetRawElement()->FindFirst(TreeScope_Subtree, pAndCondition, &pScrollBarElement);
+        }
+
+        if (pScrollBarCondition) pScrollBarCondition->Release();
+        if (pNameCondition) pNameCondition->Release();
+        if (pAndCondition) pAndCondition->Release();
+
+        if (SUCCEEDED(hr) && pScrollBarElement)
+        {
+            return std::make_unique<UIElement>(pScrollBarElement);
+        }
+        else
+        {
+            if (pScrollBarElement) pScrollBarElement->Release();
+            return nullptr;
+        }
+    }
+
+    std::unique_ptr<UIElement> FindLineDownButton(const UIElement& parent)
+    {
+        std::wcout << L"Finding 'Line down' button\n";
+        IUIAutomationElement* pButtonElement = nullptr;
+        IUIAutomationCondition* pButtonCondition = nullptr;
+        IUIAutomationCondition* pNameCondition = nullptr;
+        IUIAutomationCondition* pAndCondition = nullptr;
+        HRESULT hr = S_OK;
+
+        // Condition for button control type
+        hr = m_pAutomation->CreatePropertyCondition(
+            UIA_ControlTypePropertyId,
+            _variant_t(UIA_ButtonControlTypeId),
+            &pButtonCondition);
+
+        // Condition for button name "Line down"
+        if (SUCCEEDED(hr))
+        {
+            hr = m_pAutomation->CreatePropertyCondition(
+                UIA_NamePropertyId,
+                _variant_t(L"Line down"),
+                &pNameCondition);
+        }
+
+        if (SUCCEEDED(hr))
+        {
+            // Combine conditions
+            hr = m_pAutomation->CreateAndCondition(pButtonCondition, pNameCondition, &pAndCondition);
+        }
+
+        if (SUCCEEDED(hr))
+        {
+            // Find the button element
+            hr = parent.GetRawElement()->FindFirst(TreeScope_Subtree, pAndCondition, &pButtonElement);
+        }
+
+        // Release conditions
+        if (pButtonCondition) pButtonCondition->Release();
+        if (pNameCondition) pNameCondition->Release();
+        if (pAndCondition) pAndCondition->Release();
+
+        if (SUCCEEDED(hr) && pButtonElement)
+        {
+            return std::make_unique<UIElement>(pButtonElement);
+        }
+        else
+        {
+            if (pButtonElement) pButtonElement->Release();
+            return nullptr;
+        }
+    }
+
+    std::unique_ptr<UIElement> FindColumnRightButton(const UIElement& parent)
+    {
+        std::wcout << L"Finding 'Column right' button\n";
+        IUIAutomationElement* pButtonElement = nullptr;
+        IUIAutomationCondition* pButtonCondition = nullptr;
+        IUIAutomationCondition* pNameCondition = nullptr;
+        IUIAutomationCondition* pAndCondition = nullptr;
+        HRESULT hr = S_OK;
+
+        // Condition for button control type
+        hr = m_pAutomation->CreatePropertyCondition(
+            UIA_ControlTypePropertyId,
+            _variant_t(UIA_ButtonControlTypeId),
+            &pButtonCondition);
+
+        // Condition for button name "Column right"
+        if (SUCCEEDED(hr))
+        {
+            hr = m_pAutomation->CreatePropertyCondition(
+                UIA_NamePropertyId,
+                _variant_t(L"Column right"),
+                &pNameCondition);
+        }
+
+        if (SUCCEEDED(hr))
+        {
+            // Combine conditions
+            hr = m_pAutomation->CreateAndCondition(pButtonCondition, pNameCondition, &pAndCondition);
+        }
+
+        if (SUCCEEDED(hr))
+        {
+            // Find the button element
+            hr = parent.GetRawElement()->FindFirst(TreeScope_Subtree, pAndCondition, &pButtonElement);
+        }
+
+        // Release conditions
+        if (pButtonCondition) pButtonCondition->Release();
+        if (pNameCondition) pNameCondition->Release();
+        if (pAndCondition) pAndCondition->Release();
+
+        if (SUCCEEDED(hr) && pButtonElement)
+        {
+            return std::make_unique<UIElement>(pButtonElement);
+        }
+        else
+        {
+            if (pButtonElement) pButtonElement->Release();
+            return nullptr;
+        }
+    }
+
+    void ScrollToBottomByInvokingLineDownButton(UIElement& lineDownButton)
+    {
+        // Get the InvokePattern from the button
+        IUIAutomationInvokePattern* pInvokePattern = nullptr;
+        HRESULT hr = lineDownButton.GetRawElement()->GetCurrentPatternAs(
+            UIA_InvokePatternId, __uuidof(IUIAutomationInvokePattern), (void**)&pInvokePattern);
+
+        if (SUCCEEDED(hr) && pInvokePattern)
+        {
+            std::wcout << L"Invoking 'Line down' button to scroll\n";
+
+            // Option 1: Invoke the button a fixed number of times
+            const int maxInvocations = 100; // Adjust based on expected content length
+            for (int i = 0; i < maxInvocations; ++i)
+            {
+                hr = pInvokePattern->Invoke();
+                if (FAILED(hr))
+                {
+                    std::wcout << L"Failed to invoke 'Line down' button. HRESULT: " << std::hex << hr << L"\n";
+                    break;
+                }
+
+                // Optionally, introduce a small delay to allow the UI to update
+                Sleep(50);
+            }
+
+            pInvokePattern->Release();
+            std::wcout << L"Finished invoking 'Line down' button\n";
+        }
+        else
+        {
+            std::wcout << L"Failed to get InvokePattern from 'Line down' button. HRESULT: " << std::hex << hr << L"\n";
         }
     }
 
