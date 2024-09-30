@@ -387,20 +387,18 @@ public:
 
     std::unique_ptr<UIElement> FindLineDownButton(const UIElement& parent)
     {
-        std::wcout << L"Finding 'Line down' button\n";
+        std::wcout << L"Finding LineDown button\n";
         IUIAutomationElement* pButtonElement = nullptr;
         IUIAutomationCondition* pButtonCondition = nullptr;
         IUIAutomationCondition* pNameCondition = nullptr;
         IUIAutomationCondition* pAndCondition = nullptr;
         HRESULT hr = S_OK;
 
-        // Condition for button control type
         hr = m_pAutomation->CreatePropertyCondition(
             UIA_ControlTypePropertyId,
             _variant_t(UIA_ButtonControlTypeId),
             &pButtonCondition);
 
-        // Condition for button name "Line down"
         if (SUCCEEDED(hr))
         {
             hr = m_pAutomation->CreatePropertyCondition(
@@ -411,17 +409,14 @@ public:
 
         if (SUCCEEDED(hr))
         {
-            // Combine conditions
             hr = m_pAutomation->CreateAndCondition(pButtonCondition, pNameCondition, &pAndCondition);
         }
 
         if (SUCCEEDED(hr))
         {
-            // Find the button element
             hr = parent.GetRawElement()->FindFirst(TreeScope_Subtree, pAndCondition, &pButtonElement);
         }
 
-        // Release conditions
         if (pButtonCondition) pButtonCondition->Release();
         if (pNameCondition) pNameCondition->Release();
         if (pAndCondition) pAndCondition->Release();
@@ -446,13 +441,11 @@ public:
         IUIAutomationCondition* pAndCondition = nullptr;
         HRESULT hr = S_OK;
 
-        // Condition for button control type
         hr = m_pAutomation->CreatePropertyCondition(
             UIA_ControlTypePropertyId,
             _variant_t(UIA_ButtonControlTypeId),
             &pButtonCondition);
 
-        // Condition for button name "Column right"
         if (SUCCEEDED(hr))
         {
             hr = m_pAutomation->CreatePropertyCondition(
@@ -463,17 +456,14 @@ public:
 
         if (SUCCEEDED(hr))
         {
-            // Combine conditions
             hr = m_pAutomation->CreateAndCondition(pButtonCondition, pNameCondition, &pAndCondition);
         }
 
         if (SUCCEEDED(hr))
         {
-            // Find the button element
             hr = parent.GetRawElement()->FindFirst(TreeScope_Subtree, pAndCondition, &pButtonElement);
         }
 
-        // Release conditions
         if (pButtonCondition) pButtonCondition->Release();
         if (pNameCondition) pNameCondition->Release();
         if (pAndCondition) pAndCondition->Release();
@@ -491,36 +481,33 @@ public:
 
     void ScrollToBottomByInvokingLineDownButton(UIElement& lineDownButton)
     {
-        // Get the InvokePattern from the button
         IUIAutomationInvokePattern* pInvokePattern = nullptr;
         HRESULT hr = lineDownButton.GetRawElement()->GetCurrentPatternAs(
             UIA_InvokePatternId, __uuidof(IUIAutomationInvokePattern), (void**)&pInvokePattern);
 
         if (SUCCEEDED(hr) && pInvokePattern)
         {
-            std::wcout << L"Invoking 'Line down' button to scroll\n";
+            std::wcout << L"Invoking LineDown button to scroll\n";
 
-            // Option 1: Invoke the button a fixed number of times
-            const int maxInvocations = 100; // Adjust based on expected content length
+            const int maxInvocations = 100;
             for (int i = 0; i < maxInvocations; ++i)
             {
                 hr = pInvokePattern->Invoke();
                 if (FAILED(hr))
                 {
-                    std::wcout << L"Failed to invoke 'Line down' button. HRESULT: " << std::hex << hr << L"\n";
+                    std::wcout << L"Failed to invoke LineDown button. HRESULT: " << std::hex << hr << L"\n";
                     break;
                 }
 
-                // Optionally, introduce a small delay to allow the UI to update
                 Sleep(50);
             }
 
             pInvokePattern->Release();
-            std::wcout << L"Finished invoking 'Line down' button\n";
+            std::wcout << L"Finished invoking LineDown button\n";
         }
         else
         {
-            std::wcout << L"Failed to get InvokePattern from 'Line down' button. HRESULT: " << std::hex << hr << L"\n";
+            std::wcout << L"Failed to get InvokePattern from LineDown button. HRESULT: " << std::hex << hr << L"\n";
         }
     }
 

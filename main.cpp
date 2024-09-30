@@ -7,7 +7,6 @@
 
 void ScrollToBottomByInvokingLineDownButton(UIElement& lineDownButton)
 {
-    // Get the InvokePattern from the button
     IUIAutomationInvokePattern* pInvokePattern = nullptr;
     HRESULT hr = lineDownButton.GetRawElement()->GetCurrentPatternAs(
         UIA_InvokePatternId, __uuidof(IUIAutomationInvokePattern), (void**)&pInvokePattern);
@@ -16,8 +15,7 @@ void ScrollToBottomByInvokingLineDownButton(UIElement& lineDownButton)
     {
         std::wcout << L"Invoking LineDown button to scroll\n";
 
-        // Option 1: Invoke the button a fixed number of times
-        const int maxInvocations = 100; // Adjust based on expected content length
+        const int maxInvocations = 100;
         for (int i = 0; i < maxInvocations; ++i)
         {
             hr = pInvokePattern->Invoke();
@@ -26,8 +24,6 @@ void ScrollToBottomByInvokingLineDownButton(UIElement& lineDownButton)
                 std::wcout << L"Failed to invoke LineDown button. HRESULT: " << std::hex << hr << L"\n";
                 break;
             }
-
-            // Optionally, introduce a small delay to allow the UI to update
             Sleep(50);
         }
 
@@ -42,45 +38,41 @@ void ScrollToBottomByInvokingLineDownButton(UIElement& lineDownButton)
 
 void ScrollToRightByInvokingColumnRightButton(UIElement& columnRightButton)
 {
-    // Get the InvokePattern from the button
     IUIAutomationInvokePattern* pInvokePattern = nullptr;
     HRESULT hr = columnRightButton.GetRawElement()->GetCurrentPatternAs(
         UIA_InvokePatternId, __uuidof(IUIAutomationInvokePattern), (void**)&pInvokePattern);
 
     if (SUCCEEDED(hr) && pInvokePattern)
     {
-        std::wcout << L"Invoking 'Column right' button to scroll\n";
+        std::wcout << L"Invoking ColumnRight button to scroll\n";
 
-        // Set a reasonable maximum number of invocations
-        const int maxInvocations = 100; // Adjust based on expected content width
+        const int maxInvocations = 100;
         for (int i = 0; i < maxInvocations; ++i)
         {
             hr = pInvokePattern->Invoke();
             if (FAILED(hr))
             {
-                std::wcout << L"Failed to invoke 'Column right' button. HRESULT: " << std::hex << hr << L"\n";
+                std::wcout << L"Failed to invoke ColumnRight button. HRESULT: " << std::hex << hr << L"\n";
                 break;
             }
 
-            // Optionally, introduce a small delay to allow the UI to update
             Sleep(50);
 
-            // Optionally, check if the button is still enabled
             BOOL isEnabled = FALSE;
             hr = columnRightButton.GetRawElement()->get_CurrentIsEnabled(&isEnabled);
             if (SUCCEEDED(hr) && !isEnabled)
             {
-                std::wcout << L"'Column right' button is no longer enabled.\n";
+                std::wcout << L"ColumnRight button is no longer enabled.\n";
                 break;
             }
         }
 
         pInvokePattern->Release();
-        std::wcout << L"Finished invoking 'Column right' button\n";
+        std::wcout << L"Finished invoking ColumnRight button\n";
     }
     else
     {
-        std::wcout << L"Failed to get InvokePattern from 'Column right' button. HRESULT: " << std::hex << hr << L"\n";
+        std::wcout << L"Failed to get InvokePattern from ColumnRight button. HRESULT: " << std::hex << hr << L"\n";
     }
 }
 
@@ -97,7 +89,7 @@ int main()
             std::wcout << L"Found window:\n";
             pWindow->PrintInfo(L"  ");
             // First lets iterate all the elements and creates a list
-            // auto list = uiAutomation.GetElements(*pWindow, children); // Issue
+            // auto list = uiAutomation.GetElements(*pWindow, children);
 
 
             auto pGrid = uiAutomation.FindGridElement(*pWindow);
@@ -112,14 +104,12 @@ int main()
                 std::wcout << L"Grid element not found\n";
             }
 
-            // Spinners Columns and Rows
             auto pSpinner = uiAutomation.FindElementByNameAndType(*pWindow, L"Spinner", UIA_EditControlTypeId);
             if (pSpinner)
             {
                 std::wcout << L"Found Spinner element:\n";
                 pSpinner->PrintInfo(L"  ");
 
-                // Get the ValuePattern of the Spinner element
                 IUIAutomationValuePattern* pValuePattern = nullptr;
                 HRESULT hr = pSpinner->GetRawElement()->GetCurrentPatternAs(UIA_ValuePatternId, __uuidof(IUIAutomationValuePattern), (void**)&pValuePattern);
 
@@ -149,7 +139,6 @@ int main()
                 std::wcout << L"Found Spinner element:\n";
                 pColumns->PrintInfo(L"  ");
 
-                // Get the ValuePattern of the Spinner element
                 IUIAutomationValuePattern* pValuePattern = nullptr;
                 HRESULT hr = pColumns->GetRawElement()->GetCurrentPatternAs(UIA_ValuePatternId, __uuidof(IUIAutomationValuePattern), (void**)&pValuePattern);
 
@@ -180,14 +169,12 @@ int main()
             // Spinners <-------
 
             // Scrollbar
-            // Find vertical scrollbar
             auto verticalScrollBar = uiAutomation.FindScrollBarByName(*pGrid, L"Vertical Scroll Bar");
             if (verticalScrollBar)
             {
                 std::wcout << L"Found vertical scrollbar:\n";
                 verticalScrollBar->PrintInfo(L"    ");
 
-                // Find the "Line down" button within the vertical scrollbar
                 auto pLineDownButton = uiAutomation.FindLineDownButton(*verticalScrollBar);
 
                 if (pLineDownButton)
@@ -195,7 +182,6 @@ int main()
                     std::wcout << L"Found LineDown button:\n";
                     pLineDownButton->PrintInfo(L"      ");
 
-                    // Invoke the button repeatedly to scroll to the bottom
                     ScrollToBottomByInvokingLineDownButton(*pLineDownButton);
                 }
                 else
@@ -208,28 +194,24 @@ int main()
                 std::wcout << L"Vertical scrollbar not found\n";
             }
 
-            // Find horizontal scrollbar
             auto horizontalScrollBar = uiAutomation.FindScrollBarByName(*pGrid, L"Horizontal Scroll Bar");
             if (horizontalScrollBar)
             {
                 std::wcout << L"Found horizontal scrollbar:\n";
                 horizontalScrollBar->PrintInfo(L"    ");
 
-
-                // Find the "Column right" button within the horizontal scrollbar
                 auto pColumnRightButton = uiAutomation.FindColumnRightButton(*horizontalScrollBar);
 
                 if (pColumnRightButton)
                 {
-                    std::wcout << L"Found 'Column right' button:\n";
+                    std::wcout << L"Found ColumnRight button:\n";
                     pColumnRightButton->PrintInfo(L"      ");
 
-                    // Invoke the button repeatedly to scroll to the right
                     ScrollToRightByInvokingColumnRightButton(*pColumnRightButton);
                 }
                 else
                 {
-                    std::wcout << L"'Column right' button not found\n";
+                    std::wcout << L"ColumnRight button not found\n";
                 }
             }
             else
@@ -237,8 +219,6 @@ int main()
                 std::wcout << L"Horizontal scrollbar not found\n";
             }
             // <----------
-
-
         }
         
         else 
