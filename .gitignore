@@ -1,2 +1,15 @@
-GridAutomate/*
-x64/*
+x64/Debug/vc143.pdb
+x64/Debug/GridAutomate.ilk
+x64/Debug/GridAutomate.log
+x64/Debug/main.obj
+x64/Debug/vc143.idb
+*.ilk
+*.exe
+*.dll
+*.pdb
+*.log
+*.idb
+*.obj
+
+
+
