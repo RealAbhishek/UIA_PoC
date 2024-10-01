@@ -385,6 +385,28 @@ public:
         }
     }
 
+    std::unique_ptr<UIElement> FindScrollBarByNameWithWait(const UIElement& parent, const std::wstring& scrollbarName, int maxRetries = 10, int delayMs = 100)
+    {
+        std::wcout << L"Attempting to find scrollbar with name: " << scrollbarName << L'\n';
+        std::unique_ptr<UIElement> scrollbar = nullptr;
+
+        for (int i = 0; i < maxRetries; ++i)
+        {
+            scrollbar = FindScrollBarByName(parent, scrollbarName);
+            if (scrollbar)
+            {
+                std::wcout << L"Scrollbar found after " << (i + 1) << " attempt(s).\n";
+                return scrollbar;
+            }
+
+            std::wcout << L"Scrollbar not found. Waiting for " << delayMs << L" ms.\n";
+            Sleep(delayMs);
+        }
+
+        std::wcout << L"Scrollbar not found after " << maxRetries << " attempts.\n";
+        return nullptr;
+    }
+
     std::unique_ptr<UIElement> FindLineDownButton(const UIElement& parent)
     {
         std::wcout << L"Finding LineDown button\n";
@@ -511,5 +533,110 @@ public:
         }
     }
 
+    std::unique_ptr<UIElement> FindCellByRowAndColumn(const UIElement& gridElement, int row, int column)
+    {
+        std::wcout << L"Finding cell at Row: " << row << L", Column: " << column << L'\n';
+
+        IUIAutomationCondition* pCondition = nullptr;
+        HRESULT hr = m_pAutomation->CreatePropertyCondition(
+            UIA_ControlTypePropertyId,
+            _variant_t(UIA_EditControlTypeId),
+            &pCondition);
+
+        if (SUCCEEDED(hr))
+        {
+            IUIAutomationElementArray* pFoundElements = nullptr;
+            hr = gridElement.GetRawElement()->FindAll(TreeScope_Subtree, pCondition, &pFoundElements);
+            pCondition->Release();
+
+            if (SUCCEEDED(hr) && pFoundElements)
+            {
+                int length = 0;
+                pFoundElements->get_Length(&length);
+                for (int i = 0; i < length; ++i)
+                {
+                    IUIAutomationElement* pElement = nullptr;
+                    hr = pFoundElements->GetElement(i, &pElement);
+                    if (SUCCEEDED(hr) && pElement)
+                    {
+                        // Check if the element supports GridItemPattern
+                        BOOL supportsPattern = FALSE;
+                        VARIANT var;
+                        VariantInit(&var);
+                        //hr = pElement->get_CurrentIsPatternAvailable(UIA_GridItemPatternId, &var);
+
+                        hr = pElement->GetCurrentPropertyValue(UIA_IsGridItemPatternAvailablePropertyId, &var);
+
+                        if (SUCCEEDED(hr) && var.vt == VT_BOOL && var.boolVal == VARIANT_TRUE)
+                        {
+                            VariantClear(&var);
+                            IUIAutomationGridItemPattern* pGridItemPattern = nullptr;
+                            hr = pElement->GetCurrentPatternAs(
+                                UIA_GridItemPatternId, __uuidof(IUIAutomationGridItemPattern), (void**)&pGridItemPattern);
+
+                            if (SUCCEEDED(hr) && pGridItemPattern)
+                            {
+                                int cellRow = 0, cellColumn = 0;
+                                hr = pGridItemPattern->get_CurrentRow(&cellRow);
+                                hr = pGridItemPattern->get_CurrentColumn(&cellColumn);
+                                pGridItemPattern->Release();
+
+                                if (cellRow == row && cellColumn == column)
+                                {
+                                    pFoundElements->Release();
+                                    std::wcout << L"Found cell at (" << cellRow << L"," << cellColumn << L")\n";
+                                    return std::make_unique<UIElement>(pElement);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            VariantClear(&var);
+                        }
+                        pElement->Release();
+                    }
+                }
+                pFoundElements->Release();
+            }
+        }
+        else
+        {
+            std::wcout << L"Failed to create condition for finding cells. HRESULT: " << std::hex << hr << L'\n';
+        }
+
+        std::wcout << L"Cell not found at Row: " << row << L", Column: " << column << L'\n';
+        return nullptr;
+    }
+
+    bool SetCellValue(UIElement& cellElement, const std::wstring& value)
+    {
+        // Try to get ValuePattern
+        IUIAutomationValuePattern* pValuePattern = nullptr;
+        HRESULT hr = cellElement.GetRawElement()->GetCurrentPatternAs(
+            UIA_ValuePatternId, __uuidof(IUIAutomationValuePattern), (void**)&pValuePattern);
+
+        if (SUCCEEDED(hr) && pValuePattern)
+        {
+            BSTR bstrValue = SysAllocString(value.c_str());
+            hr = pValuePattern->SetValue(bstrValue);
+            pValuePattern->Release();
+            SysFreeString(bstrValue);
+            if (SUCCEEDED(hr))
+            {
+                std::wcout << L"Value set successfully using ValuePattern\n";
+                return true;
+            }
+            else
+            {
+                std::wcout << L"Failed to set value using ValuePattern. HRESULT: " << std::hex << hr << L"\n";
+                return false;
+            }
+        }
+        else
+        {
+            std::wcout << L"ValuePattern not available or failed to retrieve. HRESULT: " << std::hex << hr << L"\n";
+            return false;
+        }
+    }
 };
 

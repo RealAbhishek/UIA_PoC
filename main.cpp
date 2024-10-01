@@ -4,6 +4,8 @@
 #include "UIElement.h"
 #include <Windows.h>
 
+const std::wstring& length = L"100";
+const int maxInvocations = 100;
 
 void ScrollToBottomByInvokingLineDownButton(UIElement& lineDownButton)
 {
@@ -15,7 +17,7 @@ void ScrollToBottomByInvokingLineDownButton(UIElement& lineDownButton)
     {
         std::wcout << L"Invoking LineDown button to scroll\n";
 
-        const int maxInvocations = 100;
+        //const int maxInvocations = 1000;
         for (int i = 0; i < maxInvocations; ++i)
         {
             hr = pInvokePattern->Invoke();
@@ -46,7 +48,7 @@ void ScrollToRightByInvokingColumnRightButton(UIElement& columnRightButton)
     {
         std::wcout << L"Invoking ColumnRight button to scroll\n";
 
-        const int maxInvocations = 100;
+        //const int maxInvocations = 1000;
         for (int i = 0; i < maxInvocations; ++i)
         {
             hr = pInvokePattern->Invoke();
@@ -76,7 +78,8 @@ void ScrollToRightByInvokingColumnRightButton(UIElement& columnRightButton)
     }
 }
 
-int main() 
+//int main() 
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     try 
     {
@@ -115,11 +118,11 @@ int main()
 
                 if (SUCCEEDED(hr) && pValuePattern)
                 {
-                    BSTR bstrValue = SysAllocString(L"100");
+                    BSTR bstrValue = SysAllocString(length.c_str());
                     hr = pValuePattern->SetValue(bstrValue);
                     if (SUCCEEDED(hr))
                     {
-                        std::wcout << L"Spinner value set to 100\n";
+                        std::wcout << L"Spinner value set to - " << length << "\n";
                     }
                     else
                     {
@@ -144,11 +147,11 @@ int main()
 
                 if (SUCCEEDED(hr) && pValuePattern)
                 {
-                    BSTR bstrValue = SysAllocString(L"100");
+                    BSTR bstrValue = SysAllocString(length.c_str());
                     hr = pValuePattern->SetValue(bstrValue);
                     if (SUCCEEDED(hr))
                     {
-                        std::wcout << L"Spinner value set to 100\n";
+                        std::wcout << L"Spinner value set to - " << length << "\n";
                     }
                     else
                     {
@@ -166,10 +169,49 @@ int main()
             {
                 std::wcout << L"Spinner element not found\n";
             }
+
+            ////
+            int targetRow = 95;
+            int targetColumn = 95;
+            auto pCell = uiAutomation.FindCellByRowAndColumn(*pGrid, targetRow, targetColumn);
+            if (pCell)
+            {
+                std::wcout << L"Found cell:\n";
+                pCell->PrintInfo(L"    ");
+
+                // Set the value in the cell
+                std::wstring newValue = L"adubey@workfusion.com";
+                if (uiAutomation.SetCellValue(*pCell, newValue))
+                {
+                    std::wcout << L"Successfully set value '" << newValue << L"' in cell.\n";
+                }
+                else
+                {
+                    std::wcout << L"Failed to set value in cell.\n";
+                }
+                VARIANT varCellvalue;
+                VariantInit(&varCellvalue);
+
+                auto a = pCell->GetName();
+                auto rhr = pCell->GetRawElement()->GetCurrentPropertyValue(UIA_ValueValuePropertyId, &varCellvalue);
+                if (SUCCEEDED(rhr) && varCellvalue.vt == VT_BSTR)
+                {
+                    BSTR result = varCellvalue.bstrVal;
+                    std::wstring value(result, SysStringLen(result));
+                    auto Message = value + L" - Retrieved Without using Scrollbars";
+                    
+                    VariantClear(&varCellvalue);
+                }
+                else
+                    VariantClear(&varCellvalue);
+            }
+            // 
             // Spinners <-------
 
             // Scrollbar
             auto verticalScrollBar = uiAutomation.FindScrollBarByName(*pGrid, L"Vertical Scroll Bar");
+            //auto verticalScrollBar = uiAutomation.FindScrollBarByNameWithWait(*pGrid, L"Vertical Scroll Bar"); 
+            
             if (verticalScrollBar)
             {
                 std::wcout << L"Found vertical scrollbar:\n";
@@ -217,6 +259,42 @@ int main()
             else
             {
                 std::wcout << L"Horizontal scrollbar not found\n";
+            }
+            // <----------
+
+            // Find cell in the grid/table of UIA_EditControlTypeId control type
+            int rows = 95;
+            int columns = 95;
+
+            auto pCellItem = uiAutomation.FindCellByRowAndColumn(*pGrid, rows, columns);
+            if (pCellItem)
+            {
+                std::wcout << L"Found cell:\n";
+                pCellItem->PrintInfo(L"    ");
+
+                std::wstring newValue = L"adubey@workfusion.com";
+                if (uiAutomation.SetCellValue(*pCellItem, newValue))
+                {
+                    std::wcout << L"Successfully set value '" << newValue << L"' in cell.\n";
+                }
+                else
+                {
+                    std::wcout << L"Failed to set value in cell.\n";
+                }
+                VARIANT varCellvalue;
+                VariantInit(&varCellvalue);
+                
+                auto a = pCellItem->GetName();
+                auto rhr = pCellItem->GetRawElement()->GetCurrentPropertyValue(UIA_ValueValuePropertyId, &varCellvalue);
+                if (SUCCEEDED(rhr) && varCellvalue.vt == VT_BSTR)
+                {
+                    BSTR result = varCellvalue.bstrVal;
+                    std::wstring value(result, SysStringLen(result));
+                    
+                    VariantClear(&varCellvalue);
+                }
+                else
+                    VariantClear(&varCellvalue);
             }
             // <----------
         }
