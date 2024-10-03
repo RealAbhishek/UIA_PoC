@@ -3,9 +3,10 @@
 #include <tuple>
 #include "UIElement.h"
 #include <Windows.h>
+#include <chrono>
 
-const std::wstring& length = L"100";
-const int maxInvocations = 100;
+const std::wstring& length = L"1000";
+const int maxInvocations = 1000;
 
 void ScrollToBottomByInvokingLineDownButton(UIElement& lineDownButton)
 {
@@ -169,49 +170,49 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             {
                 std::wcout << L"Spinner element not found\n";
             }
-
+            //Sleep(10000);
             ////
-            int targetRow = 95;
-            int targetColumn = 95;
-            auto pCell = uiAutomation.FindCellByRowAndColumn(*pGrid, targetRow, targetColumn);
-            if (pCell)
-            {
-                std::wcout << L"Found cell:\n";
-                pCell->PrintInfo(L"    ");
+            //int targetRow = 995;
+            //int targetColumn = 995;
+            //auto pCell = uiAutomation.FindCellByRowAndColumn(*pGrid, targetRow, targetColumn);
+            //if (pCell)
+            //{
+            //    std::wcout << L"Found cell:\n";
+            //    pCell->PrintInfo(L"    ");
 
-                // Set the value in the cell
-                std::wstring newValue = L"adubey@workfusion.com";
-                if (uiAutomation.SetCellValue(*pCell, newValue))
-                {
-                    std::wcout << L"Successfully set value '" << newValue << L"' in cell.\n";
-                }
-                else
-                {
-                    std::wcout << L"Failed to set value in cell.\n";
-                }
-                VARIANT varCellvalue;
-                VariantInit(&varCellvalue);
+            //    // Set the value in the cell
+            //    std::wstring newValue = L"adubey@workfusion.com";
+            //    if (uiAutomation.SetCellValue(*pCell, newValue))
+            //    {
+            //        std::wcout << L"Successfully set value '" << newValue << L"' in cell.\n";
+            //    }
+            //    else
+            //    {
+            //        std::wcout << L"Failed to set value in cell.\n";
+            //    }
+            //    VARIANT varCellvalue;
+            //    VariantInit(&varCellvalue);
 
-                auto a = pCell->GetName();
-                auto rhr = pCell->GetRawElement()->GetCurrentPropertyValue(UIA_ValueValuePropertyId, &varCellvalue);
-                if (SUCCEEDED(rhr) && varCellvalue.vt == VT_BSTR)
-                {
-                    BSTR result = varCellvalue.bstrVal;
-                    std::wstring value(result, SysStringLen(result));
-                    auto Message = value + L" - Retrieved Without using Scrollbars";
-                    
-                    VariantClear(&varCellvalue);
-                }
-                else
-                    VariantClear(&varCellvalue);
-            }
+            //    auto a = pCell->GetName();
+            //    auto rhr = pCell->GetRawElement()->GetCurrentPropertyValue(UIA_ValueValuePropertyId, &varCellvalue);
+            //    if (SUCCEEDED(rhr) && varCellvalue.vt == VT_BSTR)
+            //    {
+            //        BSTR result = varCellvalue.bstrVal;
+            //        std::wstring value(result, SysStringLen(result));
+            //        auto Message = value + L" - Retrieved Without using Scrollbars";
+            //        
+            //        VariantClear(&varCellvalue);
+            //    }
+            //    else
+            //        VariantClear(&varCellvalue);
+            //}
             // 
             // Spinners <-------
 
             // Scrollbar
             auto verticalScrollBar = uiAutomation.FindScrollBarByName(*pGrid, L"Vertical Scroll Bar");
             //auto verticalScrollBar = uiAutomation.FindScrollBarByNameWithWait(*pGrid, L"Vertical Scroll Bar"); 
-            
+            auto start = std::chrono::high_resolution_clock::now();
             if (verticalScrollBar)
             {
                 std::wcout << L"Found vertical scrollbar:\n";
@@ -263,8 +264,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             // <----------
 
             // Find cell in the grid/table of UIA_EditControlTypeId control type
-            int rows = 95;
-            int columns = 95;
+            int rows = 995;
+            int columns = 995;
 
             auto pCellItem = uiAutomation.FindCellByRowAndColumn(*pGrid, rows, columns);
             if (pCellItem)
@@ -297,6 +298,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                     VariantClear(&varCellvalue);
             }
             // <----------
+
+            auto end = std::chrono::high_resolution_clock::now();
+
+            std::chrono::duration<double, std::milli> elapsed = end - start;
+            std::cout << "Function took " << elapsed.count() << " ms to execute.\n";
         }
         
         else 
