@@ -268,6 +268,21 @@ int main()
             // <----------
 
             // Find cell in the grid/table of UIA_EditControlTypeId control type
+
+            auto cell = uiAutomation.FindCellByName(*pWindow, L"Column100 Row 100, Not sorted.");
+            if (cell)
+            {
+                std::wstring newValue = L"adubey@workfusion.com";
+                if (uiAutomation.SetCellValue(*cell, newValue))
+                {
+                    std::wcout << L"Successfully set value '" << newValue << L"' in cell.\n";
+                }
+                else
+                {
+                    std::wcout << L"Failed to set value in cell.\n";
+                }
+                cell->PrintInfo(L"Cell Info: ");
+            }
             int rows = 1;
             int columns = 1;
 

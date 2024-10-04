@@ -170,6 +170,80 @@ public:
         return nullptr;
     }
 
+    std::unique_ptr<UIElement> FindCellByName(const UIElement& rootElement, const std::wstring& cellName)
+    {
+        std::wcout << L"FindCellByName: " << cellName << L'\n';
+
+        if (!m_pAutomation)
+        {
+            std::wcerr << L"UIAutomation is not initialized" << std::endl;
+            return nullptr;
+        }
+
+        IUIAutomationCondition* pNameCondition = nullptr;
+        VARIANT varProp;
+        VariantInit(&varProp);
+        varProp.vt = VT_BSTR;
+        varProp.bstrVal = SysAllocString(cellName.c_str());
+        HRESULT hr = m_pAutomation->CreatePropertyCondition(UIA_NamePropertyId, varProp, &pNameCondition);
+        VariantClear(&varProp);
+
+        if (FAILED(hr) || !pNameCondition)
+        {
+            std::wcerr << L"Failed to create name condition" << std::endl;
+            return nullptr;
+        }
+
+        IUIAutomationCondition* pTypeCondition = nullptr;
+        varProp.vt = VT_I4;
+        varProp.lVal = UIA_EditControlTypeId;
+        hr = m_pAutomation->CreatePropertyCondition(UIA_ControlTypePropertyId, varProp, &pTypeCondition);
+
+        if (FAILED(hr) || !pTypeCondition)
+        {
+            pNameCondition->Release();
+            std::wcerr << L"Failed to create type condition" << std::endl;
+            return nullptr;
+        }
+
+        IUIAutomationCondition* pCombinedCondition = nullptr;
+        hr = m_pAutomation->CreateAndCondition(pNameCondition, pTypeCondition, &pCombinedCondition);
+        pNameCondition->Release();
+        pTypeCondition->Release();
+
+        if (FAILED(hr) || !pCombinedCondition)
+        {
+            std::wcerr << L"Failed to create combined condition" << std::endl;
+            return nullptr;
+        }
+
+        IUIAutomationElement* pCellElement = nullptr;
+        hr = rootElement.GetRawElement()->FindFirst(TreeScope_Descendants, pCombinedCondition, &pCellElement);
+        pCombinedCondition->Release();
+
+        if (FAILED(hr) || !pCellElement)
+        {
+            std::wcerr << L"Cell not found" << std::endl;
+            return nullptr;
+        }
+
+        VARIANT varGridItem;
+        VariantInit(&varGridItem);
+        hr = pCellElement->GetCurrentPropertyValue(UIA_IsGridItemPatternAvailablePropertyId, &varGridItem);
+        
+        if (FAILED(hr) || varGridItem.vt != VT_BOOL || !varGridItem.boolVal)
+        {
+            pCellElement->Release();
+            VariantClear(&varGridItem);
+            std::wcerr << L"Found element is not a grid item" << std::endl;
+            return nullptr;
+        }
+
+        VariantClear(&varGridItem);
+        std::wcout << L"Cell found by Name: " << cellName << std::endl;
+        return std::make_unique<UIElement>(pCellElement);
+    }
+
     std::unique_ptr<UIElement> FindTabularElement(const UIElement& parent)
     {
         std::wcout << L"Finding tabular element\n";
