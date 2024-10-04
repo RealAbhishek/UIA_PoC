@@ -5,8 +5,8 @@
 #include <Windows.h>
 #include <chrono>
 
-const std::wstring& length = L"1000";
-const int maxInvocations = 1000;
+const std::wstring& length = L"100";
+const int maxInvocations = 100;
 
 void ScrollToBottomByInvokingLineDownButton(UIElement& lineDownButton)
 {
@@ -79,14 +79,15 @@ void ScrollToRightByInvokingColumnRightButton(UIElement& columnRightButton)
     }
 }
 
-//int main() 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+int main() 
+//int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     try 
     {
         UIAutomationWrapper uiAutomation;
         IUIAutomationElementArray* children = nullptr;
 
+        //auto pWindow = uiAutomation.FindWindowByName(L"Table App");
         auto pWindow = uiAutomation.FindWindowByName(L"Grid Control Demo");
         if (pWindow) 
         {
@@ -96,7 +97,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             // auto list = uiAutomation.GetElements(*pWindow, children);
 
 
-            auto pGrid = uiAutomation.FindGridElement(*pWindow);
+            //auto pGrid = uiAutomation.FindGridElement(*pWindow);
+            auto pGrid = uiAutomation.FindTabularElement(*pWindow);
             if (pGrid) 
             {
                 std::wcout << L"Found grid element:\n";
@@ -136,7 +138,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                     std::wcout << L"Failed to get ValuePattern from Spinner element\n";
                 }
             }
-
+            //auto start = std::chrono::high_resolution_clock::now();
             auto pColumns = uiAutomation.FindElementByNameAndType(*pWindow, L"Columns", UIA_EditControlTypeId);
             if (pColumns)
             {
@@ -209,9 +211,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             // 
             // Spinners <-------
 
+            
             // Scrollbar
             auto verticalScrollBar = uiAutomation.FindScrollBarByName(*pGrid, L"Vertical Scroll Bar");
-            //auto verticalScrollBar = uiAutomation.FindScrollBarByNameWithWait(*pGrid, L"Vertical Scroll Bar"); 
+            
             auto start = std::chrono::high_resolution_clock::now();
             if (verticalScrollBar)
             {
@@ -261,13 +264,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             {
                 std::wcout << L"Horizontal scrollbar not found\n";
             }
+            
             // <----------
 
             // Find cell in the grid/table of UIA_EditControlTypeId control type
-            int rows = 995;
-            int columns = 995;
+            int rows = 1;
+            int columns = 1;
 
-            auto pCellItem = uiAutomation.FindCellByRowAndColumn(*pGrid, rows, columns);
+            auto pCellItem = uiAutomation.FindCellByRowAndColumn0(*pGrid, rows, columns);
             if (pCellItem)
             {
                 std::wcout << L"Found cell:\n";
@@ -291,7 +295,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                 {
                     BSTR result = varCellvalue.bstrVal;
                     std::wstring value(result, SysStringLen(result));
-                    
+                    std::wcout << L"Retrieved value: " << value << L"\n";
                     VariantClear(&varCellvalue);
                 }
                 else
